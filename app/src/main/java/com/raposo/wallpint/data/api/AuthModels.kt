@@ -19,7 +19,6 @@ class AuthModels {
         val apellidos: String,
         val email: String,
         val telefono: String,
-        val password: String,
-        val direccion: String? = null
+        val password: String
     )
 }

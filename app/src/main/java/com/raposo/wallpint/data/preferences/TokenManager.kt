@@ -15,7 +15,19 @@ class TokenManager(context: Context) {
         return prefs.getString("jwt_token", null)
     }
 
-    fun clear() {
-        prefs.edit().remove("jwt_token").apply()
+    fun clearToken() {
+        prefs.edit()
+            .remove("jwt_token")
+            .remove("rol")
+            .apply()
     }
+
+    fun saveRol(rol: String) {
+        prefs.edit().putString("rol", rol).apply()
+    }
+
+    fun getRol(): String? {
+        return prefs.getString("rol", null)
+    }
+
 }

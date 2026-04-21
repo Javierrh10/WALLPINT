@@ -8,6 +8,9 @@ interface AuthApi {
     @POST("api/auth/login")
     suspend fun login(@Body request: AuthModels.LoginRequest): Response<AuthModels.AuthResponse>
 
-    @POST("api/auth/register")
-    suspend fun register(@Body request: AuthModels.RegisterRequest): Response<AuthModels.AuthResponse>
+    @POST("api/auth/registro/cliente")
+    suspend fun registroCliente(@Body request: AuthModels.RegisterRequest): Response<AuthModels.AuthResponse>
+
+    @POST("api/auth/registro/pintor")
+    suspend fun registroPintor(@Body request: AuthModels.RegisterRequest): Response<AuthModels.AuthResponse>
 }

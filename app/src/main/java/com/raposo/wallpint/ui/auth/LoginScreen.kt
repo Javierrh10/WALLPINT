@@ -26,16 +26,25 @@ private val GrisCampo = Color(0xFF8A9BB0)
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onLoginSuccess: (String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val authState = viewModel.authState
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFFE6F0FA), Color(0xFFC8E1F5))
     )
+
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            val rol = authState.rol
+            onLoginSuccess(rol)
+        }
+    }
 
     Box(
         modifier = Modifier

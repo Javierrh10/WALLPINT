@@ -1,6 +1,5 @@
 package com.raposo.wallpint.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,9 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = WallpintBlue,
+    secondary = WallpintBlue,
+    tertiary = TextGray,
+    background = WallpintBgBlue
 )
 
 private val LightColorScheme = lightColorScheme(
