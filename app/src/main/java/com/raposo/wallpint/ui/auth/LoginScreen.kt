@@ -27,7 +27,7 @@ private val GrisCampo = Color(0xFF8A9BB0)
 fun LoginScreen(
     viewModel: AuthViewModel,
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (String, String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -42,7 +42,9 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
             val rol = authState.rol
-            onLoginSuccess(rol)
+            val nombre = authState.nombreUsuario
+
+            onLoginSuccess(rol, nombre)
         }
     }
 

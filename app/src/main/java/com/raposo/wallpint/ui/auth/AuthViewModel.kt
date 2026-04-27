@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    data class Success(val rol: String) : AuthState()
+    // ¡Aquí ya lo tenías bien preparado para pedir el nombre!
+    data class Success(val rol: String, val nombreUsuario: String) : AuthState()
     object RegisterSuccess : AuthState()
     data class Error(val message: String) : AuthState()
 }
@@ -28,20 +29,29 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
         viewModelScope.launch {
             authState = AuthState.Loading
             try {
+                // GOLPE 1: Hacemos Login para conseguir el Token
                 val request = AuthModels.LoginRequest(email, pass)
                 val response = ApiClient.authApi.login(request)
 
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
 
-                    // Guardamos el token para futuras peticiones
                     tokenManager.saveToken(authResponse.token)
-
-                    // Guardamos el rol para futuras peticiones
                     tokenManager.saveRol(authResponse.rol)
 
-                    // Avisamos a la UI que todo ha ido bien y pasamos el ROL
-                    authState = AuthState.Success(authResponse.rol)
+                    val perfilResponse = ApiClient.authApi.obtenerPerfil("Bearer ${authResponse.token}")
+
+                    if (perfilResponse.isSuccessful && perfilResponse.body() != null) {
+                        val usuario = perfilResponse.body()!!
+
+                        tokenManager.saveNombre(usuario.nombre)
+
+                        authState = AuthState.Success(authResponse.rol, usuario.nombre)
+                    } else {
+                        // Si falla al pedir el perfil, mostramos un error
+                        authState = AuthState.Error("Login correcto, pero error al cargar perfil")
+                    }
+
                 } else {
                     authState = AuthState.Error("Email o contraseña incorrectos")
                 }
@@ -55,7 +65,6 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
         viewModelScope.launch {
             authState = AuthState.Loading
             try {
-                // Pasamos los 5 datos a tu modelo
                 val request = AuthModels.RegisterRequest(nombre, apellidos, email, telefono, pass)
 
                 val response = if (rol == "CLIENTE") {
@@ -65,12 +74,10 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
                 }
 
                 if (response.isSuccessful) {
-                    // Si todo va bien, avisamos a la pantalla
                     authState = AuthState.RegisterSuccess
                 } else {
-                    val codigoError = response.code() // Nos dirá si es 400, 403, 404...
+                    val codigoError = response.code()
                     val detalleError = response.errorBody()?.string() ?: "Sin detalles"
-
                     authState = AuthState.Error("Error $codigoError: $detalleError")
                 }
             } catch (e: Exception) {
@@ -79,7 +86,6 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
         }
     }
 
-    // Y esta pequeña función para limpiar la pantalla de errores si volvemos atrás
     fun resetState() {
         authState = AuthState.Idle
     }

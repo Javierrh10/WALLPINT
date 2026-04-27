@@ -8,7 +8,8 @@ class TokenManager(context: Context) {
         context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
     fun saveToken(token: String) {
-        prefs.edit().putString("jwt_token", token).apply()
+        // CAMBIADO a commit() para obligar a guardar al instante
+        prefs.edit().putString("jwt_token", token).commit()
     }
 
     fun getToken(): String? {
@@ -16,18 +17,22 @@ class TokenManager(context: Context) {
     }
 
     fun clearToken() {
-        prefs.edit()
-            .remove("jwt_token")
-            .remove("rol")
-            .apply()
+        prefs.edit().clear().commit()
     }
 
     fun saveRol(rol: String) {
-        prefs.edit().putString("rol", rol).apply()
+        prefs.edit().putString("rol", rol).commit()
     }
 
     fun getRol(): String? {
         return prefs.getString("rol", null)
     }
 
+    fun saveNombre(nombre: String) {
+        prefs.edit().putString("user_nombre", nombre).commit()
+    }
+
+    fun getNombre(): String? {
+        return prefs.getString("user_nombre", null)
+    }
 }

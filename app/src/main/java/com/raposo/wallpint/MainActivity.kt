@@ -30,16 +30,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. AUTO-LOGIN: Comprobamos si ya hay un token guardado
         val tokenManager = TokenManager(this)
-        // (Asegúrate de que tu TokenManager tiene una función llamada getToken() o similar)
         val tokenGuardado = tokenManager.getToken()
-
         val rolGuardado = tokenManager.getRol() ?: "CLIENTE"
 
-        // Decidimos la ruta inicial.
-        // Nota: Si en tu TokenManager también pudieras guardar el ROL, sería perfecto ponerlo aquí.
-        // Por ahora, si hay token, lo mandamos al dashboard como CLIENTE por defecto.
+        // ¡RUTA LIMPIA! Quitamos el nombre de aquí para evitar el bug de Android.
         val rutaInicial = if (!tokenGuardado.isNullOrBlank()) {
             "dashboard/$rolGuardado"
         } else {
@@ -49,7 +44,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
-            // 2. Usamos la rutaInicial que hemos calculado arriba
             NavHost(navController = navController, startDestination = rutaInicial) {
 
                 composable("login") {
@@ -59,7 +53,8 @@ class MainActivity : ComponentActivity() {
                             authViewModel.resetState()
                             navController.navigate("register")
                         },
-                        onLoginSuccess = { rol ->
+                        // Recibimos rol y nombre, pero SOLO mandamos el rol a la ruta
+                        onLoginSuccess = { rol, _ ->
                             navController.navigate("dashboard/$rol") {
                                 popUpTo("login") { inclusive = true }
                             }
@@ -76,20 +71,20 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                // ¡RUTA LIMPIA! Solo esperamos el rol.
                 composable("dashboard/{rol}") { backStackEntry ->
                     val rol = backStackEntry.arguments?.getString("rol") ?: "CLIENTE"
 
+                    // ¡LA MAGIA AQUÍ! El Dashboard le pregunta directamente a la memoria
+                    // Así nos saltamos los bugs de navegación de Jetpack Compose.
+                    val nombreReal = tokenManager.getNombre() ?: "Usuario"
+
                     DashboardScreen(
                         rol = rol,
-                        // 3. NUEVO: Lógica del botón de cerrar sesión
+                        nombreUsuario = nombreReal,
                         onLogout = {
-                            // a) Borramos el token para que la próxima vez pida Login
-                            tokenManager.clearToken() // Asegúrate de tener este método en TokenManager
-
-                            // b) Reseteamos el estado del ViewModel
+                            tokenManager.clearToken()
                             authViewModel.resetState()
-
-                            // c) Viajamos al Login y destruimos TODO el historial para no poder volver atrás
                             navController.navigate("login") {
                                 popUpTo(0) { inclusive = true }
                             }
