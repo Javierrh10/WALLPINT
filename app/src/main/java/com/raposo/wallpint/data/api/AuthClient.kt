@@ -1,29 +1,57 @@
 package com.raposo.wallpint.data.api
 
+import com.raposo.wallpint.data.preferences.TokenManager
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    // Cambia esto por tu IP local cuando pruebes en el móvil
-    // Si usas emulador: http://10.0.2.2:8080/
-    // Si usas móvil físico: http://TU_IP_LOCAL:8080/
+    // La URL de tu backend en Render
     private const val BASE_URL = "https://wallpint-backend.onrender.com/"
 
-    // El salvavidas para cuando Render se duerme (60 segundos de paciencia)
+    private var tokenManager: TokenManager? = null
+
+    fun init(manager: TokenManager) {
+        tokenManager = manager
+    }
+
+    private val authInterceptor = Interceptor { chain ->
+        val requestBuilder = chain.request().newBuilder()
+
+        val token = tokenManager?.getToken()
+
+        android.util.Log.d("ApiClient", "Interceptor: Token obtenido: $token")
+
+        // Si hay un token guardado, lo pegamos en la cabecera (Header) de la petición
+        tokenManager?.getToken()?.let { token ->
+            requestBuilder.addHeader("Authorization", "Bearer $token")
+        }
+
+        chain.proceed(requestBuilder.build())
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor (authInterceptor)
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
-    val authApi: AuthApi by lazy {
+    private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(AuthApi::class.java)
+    }
+
+    val authApi: AuthApi by lazy {
+        retrofit.create(AuthApi::class.java)
+    }
+
+    val presupuestoApi: PresupuestoApiService by lazy {
+        retrofit.create(PresupuestoApiService::class.java)
     }
 }

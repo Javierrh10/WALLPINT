@@ -12,6 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.raposo.wallpint.model.Presupuesto
+import com.raposo.wallpint.ui.presupuesto.PresupuestoViewModel
 
 private val AzulMedio = Color(0xFF0066CC)
 private val FondoApp = Color(0xFFF4F7FB)
@@ -27,6 +29,8 @@ data class NavItem(
 fun DashboardScreen(
     rol: String,
     nombreUsuario: String,
+    clienteId: Long,
+    presupuestoViewModel: PresupuestoViewModel,
     onLogout: () -> Unit
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
@@ -86,7 +90,11 @@ fun DashboardScreen(
             when (rol) {
                 "CLIENTE" -> {
                     when (selectedItem) {
-                        0 -> VistaHomeCliente(nombreUsuario)
+                        0 -> VistaHomeCliente(
+                            nombreUsuario = nombreUsuario,
+                            clienteId = clienteId,
+                            viewModel = presupuestoViewModel,
+                        )
                         1 -> PantallaEnConstruccion("Tus citas y agenda aparecerán aquí.")
                         2 -> VistaPerfil(rol = rol, nombreUsuario = nombreUsuario, onLogout = onLogout)
                     }

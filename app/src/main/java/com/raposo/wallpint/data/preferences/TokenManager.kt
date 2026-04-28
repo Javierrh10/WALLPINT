@@ -35,4 +35,12 @@ class TokenManager(context: Context) {
     fun getNombre(): String? {
         return prefs.getString("user_nombre", null)
     }
+
+    fun saveUserId(id: Long) {
+        prefs.edit().putLong("user_id", id).commit()
+    }
+
+    fun getUserId(): Long {
+        return prefs.getLong("user_id", -1L)
+    }
 }

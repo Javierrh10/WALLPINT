@@ -6,14 +6,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raposo.wallpint.data.api.ApiClient
-import com.raposo.wallpint.data.api.AuthModels
+import com.raposo.wallpint.model.AuthModels
 import com.raposo.wallpint.data.preferences.TokenManager
 import kotlinx.coroutines.launch
 
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    // ¡Aquí ya lo tenías bien preparado para pedir el nombre!
     data class Success(val rol: String, val nombreUsuario: String) : AuthState()
     object RegisterSuccess : AuthState()
     data class Error(val message: String) : AuthState()
@@ -21,7 +20,6 @@ sealed class AuthState {
 
 class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
 
-    // Este es el estado que "observará" nuestra pantalla de Compose
     var authState by mutableStateOf<AuthState>(AuthState.Idle)
         private set
 
@@ -36,19 +34,22 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
 
+                    // Guardamos lo que SÍ nos da el login
                     tokenManager.saveToken(authResponse.token)
                     tokenManager.saveRol(authResponse.rol)
 
+                    // GOLPE 2: Pedimos el perfil para sacar el ID y el Nombre
                     val perfilResponse = ApiClient.authApi.obtenerPerfil("Bearer ${authResponse.token}")
 
                     if (perfilResponse.isSuccessful && perfilResponse.body() != null) {
                         val usuario = perfilResponse.body()!!
 
+                        // Guardamos el ID y el Nombre sacados del perfil
+                        tokenManager.saveUserId(usuario.id)
                         tokenManager.saveNombre(usuario.nombre)
 
                         authState = AuthState.Success(authResponse.rol, usuario.nombre)
                     } else {
-                        // Si falla al pedir el perfil, mostramos un error
                         authState = AuthState.Error("Login correcto, pero error al cargar perfil")
                     }
 

@@ -1,5 +1,6 @@
 package com.raposo.wallpint.data.api
 
+import com.raposo.wallpint.model.AuthModels
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

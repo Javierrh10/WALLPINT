@@ -1,4 +1,4 @@
-package com.raposo.wallpint.data.api
+package com.raposo.wallpint.model
 
 class AuthModels {
     // Lo que enviamos al backend
@@ -24,6 +24,7 @@ class AuthModels {
 
     // Lo que nos responde el backend después de registrar un usuario
     data class UserProfileResponse(
+        val id: Long,
         val nombre: String,
         val apellidos: String,
         val email: String,

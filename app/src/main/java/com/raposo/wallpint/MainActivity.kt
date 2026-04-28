@@ -14,6 +14,9 @@ import com.raposo.wallpint.ui.auth.AuthViewModel
 import com.raposo.wallpint.ui.auth.LoginScreen
 import com.raposo.wallpint.ui.auth.RegisterScreen
 import com.raposo.wallpint.ui.dashboard.DashboardScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.raposo.wallpint.data.api.ApiClient
+import com.raposo.wallpint.ui.presupuesto.PresupuestoViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -31,6 +34,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val tokenManager = TokenManager(this)
+
+        ApiClient.init(tokenManager)
+
         val tokenGuardado = tokenManager.getToken()
         val rolGuardado = tokenManager.getRol() ?: "CLIENTE"
 
@@ -75,13 +81,24 @@ class MainActivity : ComponentActivity() {
                 composable("dashboard/{rol}") { backStackEntry ->
                     val rol = backStackEntry.arguments?.getString("rol") ?: "CLIENTE"
 
-                    // ¡LA MAGIA AQUÍ! El Dashboard le pregunta directamente a la memoria
                     // Así nos saltamos los bugs de navegación de Jetpack Compose.
                     val nombreReal = tokenManager.getNombre() ?: "Usuario"
+
+                    val presupuestoViewModel: PresupuestoViewModel = viewModel(
+                        factory = object : ViewModelProvider.Factory {
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                                return PresupuestoViewModel(ApiClient.presupuestoApi) as T
+                            }
+                        }
+                    )
+
+                    val clienteIdPrueba = 1L
 
                     DashboardScreen(
                         rol = rol,
                         nombreUsuario = nombreReal,
+                        clienteId = clienteIdPrueba,
+                        presupuestoViewModel = presupuestoViewModel,
                         onLogout = {
                             tokenManager.clearToken()
                             authViewModel.resetState()
