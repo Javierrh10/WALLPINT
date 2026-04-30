@@ -20,11 +20,6 @@ object ApiClient {
     private val authInterceptor = Interceptor { chain ->
         val requestBuilder = chain.request().newBuilder()
 
-        val token = tokenManager?.getToken()
-
-        android.util.Log.d("ApiClient", "Interceptor: Token obtenido: $token")
-
-        // Si hay un token guardado, lo pegamos en la cabecera (Header) de la petición
         tokenManager?.getToken()?.let { token ->
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }

@@ -31,8 +31,8 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
                 val request = AuthModels.LoginRequest(email, pass)
                 val response = ApiClient.authApi.login(request)
 
-                if (response.isSuccessful && response.body() != null) {
-                    val authResponse = response.body()!!
+                val authResponse = response.body()
+                if (response.isSuccessful && authResponse != null) {
 
                     // Guardamos lo que SÍ nos da el login
                     tokenManager.saveToken(authResponse.token)
@@ -41,8 +41,8 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
                     // GOLPE 2: Pedimos el perfil para sacar el ID y el Nombre
                     val perfilResponse = ApiClient.authApi.obtenerPerfil("Bearer ${authResponse.token}")
 
-                    if (perfilResponse.isSuccessful && perfilResponse.body() != null) {
-                        val usuario = perfilResponse.body()!!
+                    val usuario = perfilResponse.body()
+                    if (perfilResponse.isSuccessful && usuario != null) {
 
                         // Guardamos el ID y el Nombre sacados del perfil
                         tokenManager.saveUserId(usuario.id)

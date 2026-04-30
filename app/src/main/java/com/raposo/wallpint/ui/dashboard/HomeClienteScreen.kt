@@ -171,9 +171,11 @@ fun CardPresupuestoReal(presupuesto: Presupuesto) {
 
     // Calculamos el progreso de la barrita según el estado
     val progreso = when(presupuesto.estado) {
-        EstadoPresupuesto.PENDIENTE -> 0.3f
-        EstadoPresupuesto.ACEPTADO -> 0.7f
-        EstadoPresupuesto.FINALIZADO, EstadoPresupuesto.RECHAZADO -> 1.0f
+        EstadoPresupuesto.ORIENTATIVO -> 0.25f
+        EstadoPresupuesto.PENDIENTE_ACEPTACION -> 0.5f
+        EstadoPresupuesto.DEFINITIVO -> 0.75f
+        EstadoPresupuesto.ACEPTADO -> 1.0f
+        EstadoPresupuesto.RECHAZADO -> 1.0f
     }
 
     Card(modifier = Modifier.width(220.dp), shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {

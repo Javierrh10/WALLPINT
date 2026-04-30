@@ -31,7 +31,8 @@ fun DashboardScreen(
     nombreUsuario: String,
     clienteId: Long,
     presupuestoViewModel: PresupuestoViewModel,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNuevoPresupuesto: () -> Unit = {}
 ) {
     var selectedItem by remember { mutableIntStateOf(0) }
 
@@ -75,7 +76,7 @@ fun DashboardScreen(
         floatingActionButton = {
             if (rol == "CLIENTE" && selectedItem == 0) {
                 FloatingActionButton(
-                    onClick = { /* TODO: Nueva acción */ },
+                    onClick = onNuevoPresupuesto,
                     containerColor = AzulMedio,
                     contentColor = Color.White,
                     shape = CircleShape
