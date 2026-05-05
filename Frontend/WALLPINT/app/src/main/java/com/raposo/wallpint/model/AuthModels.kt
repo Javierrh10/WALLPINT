@@ -1,0 +1,48 @@
+package com.raposo.wallpint.model
+
+class AuthModels {
+    // Lo que enviamos al backend
+    data class LoginRequest(
+        val email: String,
+        val password: String // Asegúrate de que se llame igual que en tu DTO de Spring Boot
+    )
+
+    // Lo que nos responde el backend
+    data class AuthResponse(
+        val token: String,
+        val rol: String,
+        val nombre: String,
+        val id: Long
+    )
+
+    // Lo que enviamos al backend para registrar un usuario
+    data class RegisterRequest(
+        val nombre: String,
+        val apellidos: String,
+        val email: String,
+        val telefono: String,
+        val password: String
+    )
+
+    // Lo que nos responde el backend después de registrar un usuario
+    data class UserProfileResponse(
+        val id: Long,
+        val nombre: String,
+        val apellidos: String,
+        val email: String,
+        val telefono: String,
+        val password: String,
+        val rol: String
+    )
+
+    data class EditarPerfilRequest(
+        val nombre: String,
+        val apellidos: String,
+        val telefono: String
+    )
+
+    data class CambiarPasswordRequest(
+        val passwordActual: String,
+        val passwordNueva: String
+    )
+}

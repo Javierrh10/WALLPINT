@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Carpeta privada de la app donde guardamos los PDFs descargados -->
+    <cache-path name="pdfs" path="pdfs/" />
+    <files-path name="files_pdfs" path="pdfs/" />
+</paths>

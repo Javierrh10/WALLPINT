@@ -1,0 +1,106 @@
+### Crear un nuevo cliente
+POST http://localhost:8080/api/clientes
+Content-Type: application/json
+
+{
+  "nombre": "Javier",
+  "apellidos": "Raposo",
+  "email": "javier.raposo@email.com",
+  "telefono": "600123456",
+  "passwordHash": "123456",
+  "direccion": "Calle Falsa 123, Huelva"
+}
+
+### Crear un nuevo pintor
+POST http://localhost:8080/api/pintores
+Content-Type: application/json
+
+{
+  "nombre": "Carlos",
+  "apellidos": "Sánchez Martínez",
+  "email": "carlos.brocha@wallpint.com",
+  "telefono": "655987654",
+  "passwordHash": "123456",
+  "activo": true
+}
+
+### Crear un nuevo presupuesto
+POST http://localhost:8080/api/presupuestos
+Content-Type: application/json
+
+{
+  "referencia": "PRE-2026-001",
+  "total": 1250.50,
+  "cliente": {
+    "id": 1
+  }
+}
+
+### Crear una nueva cita
+POST http://localhost:8080/api/citas
+Content-Type: application/json
+
+{
+  "fechaHora": "2026-05-15T10:30:00",
+  "franja": "Mañana",
+  "notas": "Llevar muestras de colores para el salón. El cliente tiene dudas con el tono de blanco.",
+  "cliente": {
+    "id": 1
+  }
+}
+
+### Añadir una estancia a un presupuesto
+POST http://localhost:8080/api/estancias
+Content-Type: application/json
+
+{
+  "nombre": "Salón Principal",
+  "metrosCuadrados": 25.5,
+  "color": "Blanco Roto",
+  "estadoParedes": "CON HUMEDAD",
+  "presupuesto": {
+    "id": 1
+  }
+}
+
+### Generar una nueva factura
+POST http://localhost:8080/api/facturas
+Content-Type: application/json
+
+{
+  "numeroFactura": "FAC-2026-001",
+  "Total": 1513.10,
+  "estado": "PENDIENTE",
+  "presupuesto": {
+    "id": 1
+  }
+}
+
+### Crear presupuesto nuevo para la prueba
+POST http://localhost:8080/api/presupuestos
+Content-Type: application/json
+
+{
+  "referencia": "PRE-2026-002",
+  "total": 0.0,
+  "estado": "PENDIENTE",
+  "cliente": {
+    "id": 1
+  }
+}
+
+### Añadir estancia de 10 metros
+POST http://localhost:8080/api/estancias
+Content-Type: application/json
+
+{
+  "nombre": "Habitación Infantil",
+  "metrosCuadrados": 10.0,
+  "estadoParedes": "Necesita Reparación",
+  "presupuesto": {
+    "id": 2
+  }
+}
+
+### Comprobar el total del presupuesto
+GET http://localhost:8080/api/presupuestos/2
