@@ -115,7 +115,9 @@ fun DetalleCitaAdminScreen(
             cargando = accionEnCurso,
             onDismiss = { mostrarDefinitivo = false },
             onConfirmar = { request ->
-                presupuestoViewModel.marcarDefinitivo(presupuesto!!.id ?: 0L, request) {
+                // Usamos el endpoint unificado: el backend decide si convierte
+                // el orientativo en definitivo o si solo actualiza valores.
+                presupuestoViewModel.editarPresupuesto(presupuesto!!.id ?: 0L, request) {
                     mostrarDefinitivo = false
                 }
             }
@@ -293,22 +295,40 @@ private fun ContenidoDetalle(
                             )
                         }
 
-                        // Acción: tras la visita, marcar como definitivo
-                        if (presupuesto.estado == EstadoPresupuesto.ORIENTATIVO) {
-                            Spacer(Modifier.height(16.dp))
+                        // Acciones según rol y estado del presupuesto
+                        Spacer(Modifier.height(12.dp))
+                        if (presupuesto.estado != EstadoPresupuesto.ORIENTATIVO) {
+                            EstadoPresupuestoChip(presupuesto.estado)
+                            Spacer(Modifier.height(12.dp))
+                        }
+
+                        // Visibilidad del botón:
+                        //  - Admin: siempre puede editar el presupuesto (cualquier estado).
+                        //  - Pintor: solo si la cita está EN_CURSO (visita técnica activa).
+                        val puedeEditar = permitirAccionesAdmin ||
+                                cita.estado.equals("EN_CURSO", ignoreCase = true)
+
+                        if (puedeEditar) {
+                            val esOrientativo = presupuesto.estado == EstadoPresupuesto.ORIENTATIVO
                             Button(
                                 onClick = onAbrirDefinitivo,
                                 modifier = Modifier.fillMaxWidth().height(46.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = AzulOscuro)
                             ) {
-                                Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp), tint = Color.White)
+                                Icon(
+                                    if (esOrientativo) Icons.Default.Check else Icons.Default.Edit,
+                                    null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = Color.White
+                                )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Convertir en definitivo", fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(
+                                    if (esOrientativo) "Convertir en definitivo" else "Editar presupuesto",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             }
-                        } else {
-                            Spacer(Modifier.height(12.dp))
-                            EstadoPresupuestoChip(presupuesto.estado)
                         }
                     }
                 }

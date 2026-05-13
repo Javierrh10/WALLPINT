@@ -82,6 +82,38 @@ class PresupuestoViewModel(
         }
     }
 
+    /**
+     * Edita los datos del presupuesto. Backend valida permisos:
+     *  - Admin: edita siempre.
+     *  - Pintor: solo cuando tiene una cita asociada en EN_CURSO.
+     * Si el pintor no está autorizado, el backend responde 403 y el mensaje
+     * llega al usuario.
+     */
+    fun editarPresupuesto(id: Long, request: MarcarDefinitivoRequest, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _accionEnCurso.value = true
+            _errorDetalle.value = null
+            try {
+                val response = apiService.editarPresupuesto(id, request)
+                val body = response.body()
+                if (response.isSuccessful && body != null) {
+                    _detalle.value = body
+                    _presupuestos.value = _presupuestos.value.map { if (it.id == id) body else it }
+                    onSuccess()
+                } else {
+                    _errorDetalle.value = when (response.code()) {
+                        403 -> "Solo puedes editar el presupuesto cuando tienes una visita en curso."
+                        else -> "Error ${response.code()} al guardar los cambios"
+                    }
+                }
+            } catch (e: Exception) {
+                _errorDetalle.value = "Error de conexión: ${e.message}"
+            } finally {
+                _accionEnCurso.value = false
+            }
+        }
+    }
+
     /** Cliente: aceptar/rechazar el definitivo. */
     fun responder(id: Long, aceptar: Boolean, onSuccess: () -> Unit) {
         viewModelScope.launch {

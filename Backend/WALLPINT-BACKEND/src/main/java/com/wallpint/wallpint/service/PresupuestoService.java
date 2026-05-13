@@ -48,6 +48,91 @@ public class PresupuestoService {
     }
 
     /**
+     * Edita los campos económicos y técnicos de un presupuesto. Cubre tanto
+     * "convertir orientativo en definitivo" (primer cambio tras la visita) como
+     * "ajustar un definitivo" (correcciones a posteriori del admin).
+     *
+     *  - Si es ORIENTATIVO: lo convierte a DEFINITIVO + PENDIENTE_ACEPTACION.
+     *  - Si ya es DEFINITIVO: solo recalcula valores manteniendo el estado.
+     *
+     * El control de quién puede llamarlo (admin siempre, pintor solo si tiene
+     * cita EN_CURSO) se aplica en {@link #editarPresupuesto}.
+     */
+    @Transactional
+    public Presupuesto aplicarCambiosPresupuesto(
+            Long id,
+            com.wallpint.wallpint.dto.MarcarDefinitivoRequest req
+    ) {
+        Presupuesto p = presupuestoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Presupuesto no encontrado"));
+
+        // Datos técnicos
+        if (req.getTotalM2() != null) p.setTotalM2(redondear(req.getTotalM2()));
+        if (req.getLitrosPintura() != null) p.setLitrosPintura(req.getLitrosPintura());
+        if (req.getHorasEstimadas() != null) p.setHorasEstimadas(redondear(req.getHorasEstimadas()));
+        if (req.getNumPintores() != null) p.setNumPintores(req.getNumPintores());
+
+        // Económicos
+        boolean tieneDesglose = req.getCosteMateriales() != null && req.getCosteManoObra() != null;
+        if (tieneDesglose) {
+            double materiales = req.getCosteMateriales();
+            double manoObra = req.getCosteManoObra();
+            double subtotal = materiales + manoObra;
+            double total = subtotal * 1.21;
+            double iva = total - subtotal;
+            p.setCosteMateriales(redondear(materiales));
+            p.setCosteManoObra(redondear(manoObra));
+            p.setIva(redondear(iva));
+            p.setTotal(redondear(total));
+        } else if (req.getNuevoTotal() != null) {
+            double total = req.getNuevoTotal();
+            double subtotal = total / 1.21;
+            double iva = total - subtotal;
+            p.setTotal(redondear(total));
+            p.setIva(redondear(iva));
+            p.setCosteMateriales(redondear(subtotal * 0.4));
+            p.setCosteManoObra(redondear(subtotal * 0.6));
+        }
+
+        // Si era orientativo y se está convirtiendo, cambia tipo+estado
+        if (p.getTipo() == TipoPresupuesto.ORIENTATIVO) {
+            p.setTipo(TipoPresupuesto.DEFINITIVO);
+            p.setEstado(EstadoPresupuesto.PENDIENTE_ACEPTACION);
+        }
+        // Si ya era DEFINITIVO + ACEPTADO/RECHAZADO, mantenemos estado.
+
+        return presupuestoRepository.save(p);
+    }
+
+    /**
+     * Edita un presupuesto comprobando permisos:
+     *  - Admin: puede editar siempre.
+     *  - Pintor: solo si tiene una cita asociada al presupuesto en estado EN_CURSO.
+     */
+    @Transactional
+    public Presupuesto editarPresupuesto(
+            Long presupuestoId,
+            com.wallpint.wallpint.dto.MarcarDefinitivoRequest req,
+            String email,
+            boolean esAdmin
+    ) {
+        if (!esAdmin) {
+            // Buscamos si hay alguna cita EN_CURSO asociada a este presupuesto
+            // donde el pintor logueado esté asignado.
+            boolean autorizado = citaRepository.existsByPresupuestoIdAndEstadoAndPintorEmail(
+                    presupuestoId, "EN_CURSO", email
+            );
+            if (!autorizado) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.FORBIDDEN,
+                        "Solo puedes editar presupuestos con visita en curso"
+                );
+            }
+        }
+        return aplicarCambiosPresupuesto(presupuestoId, req);
+    }
+
+    /**
      * Convierte un presupuesto ORIENTATIVO en DEFINITIVO con los datos ajustados
      * tras la visita técnica. El pintor puede modificar todos los campos
      * técnicos y económicos, no solo el precio.

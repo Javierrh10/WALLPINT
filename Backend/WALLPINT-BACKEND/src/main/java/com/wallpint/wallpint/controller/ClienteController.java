@@ -27,4 +27,26 @@ public class ClienteController {
                 .toList();
         return ResponseEntity.ok(clientes);
     }
+
+    /** Detalle de un cliente concreto (admin). */
+    @GetMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteResumenDTO> obtener(@PathVariable Long id) {
+        return clienteService.obtenerPorId(id)
+                .map(c -> ResponseEntity.ok(ClienteResumenDTO.fromEntity(c)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /** Editar los datos de un cliente (admin). */
+    @org.springframework.web.bind.annotation.PutMapping("/{id}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteResumenDTO> editar(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody
+            com.wallpint.wallpint.dto.EditarClienteRequest req
+    ) {
+        return ResponseEntity.ok(
+                ClienteResumenDTO.fromEntity(clienteService.editarCliente(id, req))
+        );
+    }
 }

@@ -74,6 +74,26 @@ public class PresupuestoController {
     }
 
     /**
+     * Edita los datos del presupuesto (técnicos y económicos).
+     *  - Admin: puede editar siempre.
+     *  - Pintor: solo si tiene una cita asociada al presupuesto en EN_CURSO.
+     * El service comprueba el rol y lanza 403 si el pintor no está autorizado.
+     */
+    @PutMapping("/{id}/editar")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PINTOR')")
+    public ResponseEntity<Presupuesto> editarPresupuesto(
+            @PathVariable Long id,
+            @Valid @RequestBody MarcarDefinitivoRequest req,
+            org.springframework.security.core.Authentication auth
+    ) {
+        boolean esAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return ResponseEntity.ok(
+                presupuestoService.editarPresupuesto(id, req, auth.getName(), esAdmin)
+        );
+    }
+
+    /**
      * Cliente acepta o rechaza un presupuesto DEFINITIVO pendiente.
      */
     @PutMapping("/{id}/responder")

@@ -75,6 +75,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val gestionFactory = object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return com.raposo.wallpint.ui.admin.GestionUsuariosViewModel(
+                        ApiClient.clienteApi, ApiClient.pintorApi
+                    ) as T
+                }
+            }
+
             NavHost(navController = navController, startDestination = rutaInicial) {
 
                 composable("login") {
@@ -129,9 +138,15 @@ class MainActivity : ComponentActivity() {
 
                     // Si el usuario es ADMIN entramos al panel de administración
                     if (rol.equals("ADMIN", ignoreCase = true)) {
+                        val gestionViewModel: com.raposo.wallpint.ui.admin.GestionUsuariosViewModel =
+                            viewModel(
+                                viewModelStoreOwner = this@MainActivity,
+                                factory = gestionFactory
+                            )
                         AdminDashboardScreen(
                             nombreUsuario = nombreReal,
                             citaViewModel = citaViewModel,
+                            gestionViewModel = gestionViewModel,
                             onLogout = {
                                 tokenManager.clearToken()
                                 authViewModel.resetState()
@@ -141,6 +156,12 @@ class MainActivity : ComponentActivity() {
                             },
                             onAbrirDetalle = { id ->
                                 navController.navigate("admin/cita/$id")
+                            },
+                            onAbrirCliente = { id ->
+                                navController.navigate("admin/cliente/$id")
+                            },
+                            onAbrirPintor = { id ->
+                                navController.navigate("admin/pintor/$id")
                             }
                         )
                         return@composable
@@ -333,6 +354,48 @@ class MainActivity : ComponentActivity() {
                             vm.cargarCitasCliente(clienteId)
                             navController.popBackStack()
                         }
+                    )
+                }
+
+                composable(
+                    route = "admin/cliente/{id}",
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val id = backStackEntry.arguments?.getLong("id") ?: 0L
+                    val gVm: com.raposo.wallpint.ui.admin.GestionUsuariosViewModel =
+                        viewModel(viewModelStoreOwner = this@MainActivity, factory = gestionFactory)
+                    val pVm: PresupuestoViewModel =
+                        viewModel(viewModelStoreOwner = this@MainActivity, factory = presupuestoFactory)
+                    val cVm: CitaViewModel =
+                        viewModel(viewModelStoreOwner = this@MainActivity, factory = citaFactory)
+                    com.raposo.wallpint.ui.admin.DetalleClienteAdminScreen(
+                        clienteId = id,
+                        gestionViewModel = gVm,
+                        presupuestoViewModel = pVm,
+                        citaViewModel = cVm,
+                        onBack = { navController.popBackStack() },
+                        onAbrirCita = { citaId -> navController.navigate("admin/cita/$citaId") },
+                        onAbrirPresupuesto = { presupuestoId ->
+                            navController.navigate("presupuesto/detalle/$presupuestoId")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "admin/pintor/{id}",
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val id = backStackEntry.arguments?.getLong("id") ?: 0L
+                    val gVm: com.raposo.wallpint.ui.admin.GestionUsuariosViewModel =
+                        viewModel(viewModelStoreOwner = this@MainActivity, factory = gestionFactory)
+                    val cVm: CitaViewModel =
+                        viewModel(viewModelStoreOwner = this@MainActivity, factory = citaFactory)
+                    com.raposo.wallpint.ui.admin.DetallePintorAdminScreen(
+                        pintorId = id,
+                        gestionViewModel = gVm,
+                        citaViewModel = cVm,
+                        onBack = { navController.popBackStack() },
+                        onAbrirCita = { citaId -> navController.navigate("admin/cita/$citaId") }
                     )
                 }
 

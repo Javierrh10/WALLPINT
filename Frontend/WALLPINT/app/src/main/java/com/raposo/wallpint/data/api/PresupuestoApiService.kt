@@ -49,6 +49,13 @@ interface PresupuestoApiService {
         @Body req: MarcarDefinitivoRequest
     ): Response<Presupuesto>
 
+    // Admin: edita siempre. Pintor: solo cuando hay cita EN_CURSO asignada.
+    @PUT("api/presupuestos/{id}/editar")
+    suspend fun editarPresupuesto(
+        @Path("id") id: Long,
+        @Body req: MarcarDefinitivoRequest
+    ): Response<Presupuesto>
+
     // Cliente: aceptar o rechazar el definitivo
     @PUT("api/presupuestos/{id}/responder")
     suspend fun responder(

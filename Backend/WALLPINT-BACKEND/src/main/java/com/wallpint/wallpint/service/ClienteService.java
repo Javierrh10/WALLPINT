@@ -52,6 +52,32 @@ public class ClienteService {
         return clienteRepository.findByEmail(email);
     }
 
+    public Optional<Cliente> obtenerPorId(Long id) {
+        return clienteRepository.findById(id);
+    }
+
+    /** Edita los datos del cliente (admin). No toca contraseña ni rol. */
+    public Cliente editarCliente(Long id, com.wallpint.wallpint.dto.EditarClienteRequest req) {
+        Cliente c = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        // Si está cambiando el email, comprobamos que no esté en uso por otro
+        if (!c.getEmail().equalsIgnoreCase(req.getEmail())
+                && clienteRepository.findByEmail(req.getEmail()).isPresent()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT,
+                    "Ese email ya está en uso por otro cliente"
+            );
+        }
+
+        c.setNombre(req.getNombre());
+        c.setApellidos(req.getApellidos());
+        c.setEmail(req.getEmail());
+        c.setTelefono(req.getTelefono());
+        c.setDireccion(req.getDireccion());
+        return clienteRepository.save(c);
+    }
+
     public Cliente registrarDesdeRequest(RegisterRequest req) {
         Cliente c = new Cliente();
         c.setNombre(req.getNombre());

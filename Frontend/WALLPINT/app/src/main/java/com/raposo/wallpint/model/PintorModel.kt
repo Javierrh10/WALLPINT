@@ -16,6 +16,13 @@ data class AsignarPintoresRequest(
     val pintorIds: List<Long>
 )
 
+data class EditarPintorRequest(
+    val nombre: String,
+    val apellidos: String,
+    val email: String,
+    val telefono: String
+)
+
 data class ClienteResumen(
     val id: Long,
     val nombre: String,
@@ -28,3 +35,11 @@ data class ClienteResumen(
     val nombreCompleto: String
         get() = listOfNotNull(nombre, apellidos?.takeIf { it.isNotBlank() }).joinToString(" ")
 }
+
+data class EditarClienteRequest(
+    val nombre: String,
+    val apellidos: String,
+    val email: String,
+    val telefono: String,
+    val direccion: String? = null
+)

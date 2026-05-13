@@ -48,4 +48,26 @@ public class PintorController {
                 PintorResumenDTO.fromEntity(pintorService.cambiarEstadoActivo(id, activo))
         );
     }
+
+    /** Detalle de un pintor concreto (admin). */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PintorResumenDTO> obtener(@PathVariable Long id) {
+        return pintorService.obtenerPorId(id)
+                .map(p -> ResponseEntity.ok(PintorResumenDTO.fromEntity(p)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /** Editar los datos de un pintor (admin). No toca contraseña ni activo. */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PintorResumenDTO> editar(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody
+            com.wallpint.wallpint.dto.EditarPintorRequest req
+    ) {
+        return ResponseEntity.ok(
+                PintorResumenDTO.fromEntity(pintorService.editarPintor(id, req))
+        );
+    }
 }

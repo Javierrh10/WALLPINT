@@ -40,13 +40,99 @@ private enum class TabAdmin(val label: String, val estados: List<String>) {
     HISTORIAL("Historial", listOf("COMPLETADA", "CANCELADA"))
 }
 
+private enum class SeccionAdmin { CITAS, CLIENTES, PINTORES }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
     nombreUsuario: String,
     citaViewModel: CitaViewModel,
+    gestionViewModel: GestionUsuariosViewModel,
     onLogout: () -> Unit,
-    onAbrirDetalle: (Long) -> Unit = {}
+    onAbrirDetalle: (Long) -> Unit = {},
+    onAbrirCliente: (Long) -> Unit = {},
+    onAbrirPintor: (Long) -> Unit = {}
+) {
+    var seccionActual by remember { mutableStateOf(SeccionAdmin.CITAS) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("PANEL ADMIN", fontSize = 10.sp, color = AzulMedio, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Text(
+                            when (seccionActual) {
+                                SeccionAdmin.CITAS -> "Hola, $nombreUsuario"
+                                SeccionAdmin.CLIENTES -> "Clientes"
+                                SeccionAdmin.PINTORES -> "Pintores"
+                            },
+                            fontWeight = FontWeight.Bold, color = AzulOscuro
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onLogout) {
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Cerrar sesión", tint = AzulOscuro)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = FondoApp)
+            )
+        },
+        bottomBar = {
+            NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
+                NavigationBarItem(
+                    selected = seccionActual == SeccionAdmin.CITAS,
+                    onClick = { seccionActual = SeccionAdmin.CITAS },
+                    icon = { Icon(Icons.Default.DateRange, contentDescription = "Citas") },
+                    label = { Text("Citas") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AzulMedio,
+                        selectedTextColor = AzulMedio,
+                        indicatorColor = AzulClaro
+                    )
+                )
+                NavigationBarItem(
+                    selected = seccionActual == SeccionAdmin.CLIENTES,
+                    onClick = { seccionActual = SeccionAdmin.CLIENTES },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Clientes") },
+                    label = { Text("Clientes") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AzulMedio,
+                        selectedTextColor = AzulMedio,
+                        indicatorColor = AzulClaro
+                    )
+                )
+                NavigationBarItem(
+                    selected = seccionActual == SeccionAdmin.PINTORES,
+                    onClick = { seccionActual = SeccionAdmin.PINTORES },
+                    icon = { Icon(Icons.Default.Build, contentDescription = "Pintores") },
+                    label = { Text("Pintores") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = AzulMedio,
+                        selectedTextColor = AzulMedio,
+                        indicatorColor = AzulClaro
+                    )
+                )
+            }
+        },
+        containerColor = FondoApp
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+            when (seccionActual) {
+                SeccionAdmin.CITAS -> SeccionCitas(citaViewModel, onAbrirDetalle)
+                SeccionAdmin.CLIENTES -> AdminClientesScreen(gestionViewModel, onAbrirCliente = onAbrirCliente)
+                SeccionAdmin.PINTORES -> AdminPintoresScreen(gestionViewModel, onAbrirPintor = onAbrirPintor)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SeccionCitas(
+    citaViewModel: CitaViewModel,
+    onAbrirDetalle: (Long) -> Unit
 ) {
     val citas by citaViewModel.citas.collectAsState()
     val cargando by citaViewModel.cargando.collectAsState()
@@ -64,83 +150,60 @@ fun AdminDashboardScreen(
 
     val filtradas = citas.filter { it.estado.uppercase() in tabSeleccionado.estados }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("PANEL ADMIN", fontSize = 10.sp, color = AzulMedio, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                        Text("Hola, $nombreUsuario", fontWeight = FontWeight.Bold, color = AzulOscuro)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Cerrar sesión", tint = AzulOscuro)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = FondoApp)
-            )
-        },
-        containerColor = FondoApp
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
 
-            // Resumen
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                StatChip("Pendientes", pendientes.toString(), Amarillo, Modifier.weight(1f))
-                StatChip("Activas", activas.toString(), Verde, Modifier.weight(1f))
-                StatChip("Historial", historial.toString(), GrisTexto, Modifier.weight(1f))
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            StatChip("Pendientes", pendientes.toString(), Amarillo, Modifier.weight(1f))
+            StatChip("Activas", activas.toString(), Verde, Modifier.weight(1f))
+            StatChip("Historial", historial.toString(), GrisTexto, Modifier.weight(1f))
+        }
+
+        TabRow(
+            selectedTabIndex = TabAdmin.entries.indexOf(tabSeleccionado),
+            containerColor = FondoApp,
+            contentColor = AzulOscuro
+        ) {
+            TabAdmin.entries.forEach { tab ->
+                Tab(
+                    selected = tab == tabSeleccionado,
+                    onClick = { tabSeleccionado = tab },
+                    text = { Text(tab.label, fontWeight = FontWeight.Bold) }
+                )
             }
+        }
 
-            // Tabs
-            TabRow(
-                selectedTabIndex = TabAdmin.entries.indexOf(tabSeleccionado),
-                containerColor = FondoApp,
-                contentColor = AzulOscuro
-            ) {
-                TabAdmin.entries.forEach { tab ->
-                    Tab(
-                        selected = tab == tabSeleccionado,
-                        onClick = { tabSeleccionado = tab },
-                        text = { Text(tab.label, fontWeight = FontWeight.Bold) }
-                    )
+        PullToRefreshBox(
+            isRefreshing = cargando,
+            onRefresh = { citaViewModel.cargarTodasLasCitas() },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            when {
+                error != null -> Card(
+                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEE2E2)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(error!!, color = Rojo, modifier = Modifier.padding(16.dp), fontSize = 13.sp)
                 }
-            }
-
-            PullToRefreshBox(
-                isRefreshing = cargando,
-                onRefresh = { citaViewModel.cargarTodasLasCitas() },
-                modifier = Modifier.fillMaxSize()
-            ) {
-                when {
-                    error != null -> Card(
-                        modifier = Modifier.padding(24.dp).fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEE2E2)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(error!!, color = Rojo, modifier = Modifier.padding(16.dp), fontSize = 13.sp)
+                filtradas.isEmpty() && !cargando -> EmptyTab(tabSeleccionado)
+                else -> LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(filtradas, key = { it.id ?: it.fechaHora }) { cita ->
+                        CitaAdminCard(
+                            cita = cita,
+                            onClick = { cita.id?.let(onAbrirDetalle) }
+                        )
                     }
-                    filtradas.isEmpty() && !cargando -> EmptyTab(tabSeleccionado)
-                    else -> LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(filtradas, key = { it.id ?: it.fechaHora }) { cita ->
-                            CitaAdminCard(
-                                cita = cita,
-                                onClick = { cita.id?.let(onAbrirDetalle) }
-                            )
-                        }
-                        item { Spacer(Modifier.height(40.dp)) }
-                    }
+                    item { Spacer(Modifier.height(40.dp)) }
                 }
             }
         }
     }
-
 }
 
 @Composable

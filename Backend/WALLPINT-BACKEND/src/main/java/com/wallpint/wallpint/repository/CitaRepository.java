@@ -36,6 +36,24 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT c FROM Cita c JOIN c.pintores p WHERE p.id = :pintorId ORDER BY c.fechaHora DESC")
     List<Cita> findCitasAsignadasAlPintor(@Param("pintorId") Long pintorId);
 
+    /**
+     * ¿Existe alguna cita del presupuesto X en estado Y donde el pintor con
+     * ese email está asignado? Se usa para autorizar al pintor a editar el
+     * presupuesto solo cuando tiene visita en curso.
+     */
+    @Query("""
+        SELECT COUNT(c) > 0 FROM Cita c
+        JOIN c.pintores p
+        WHERE c.presupuesto.id = :presupuestoId
+          AND c.estado = :estado
+          AND p.email = :email
+        """)
+    boolean existsByPresupuestoIdAndEstadoAndPintorEmail(
+            @Param("presupuestoId") Long presupuestoId,
+            @Param("estado") String estado,
+            @Param("email") String email
+    );
+
     // Para el calendario: buscar citas en un rango de fechas
     List<Cita> findByFechaHoraBetween(LocalDate fechaInicio, LocalDate fechaFin);
 

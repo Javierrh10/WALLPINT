@@ -60,6 +60,31 @@ public class PintorService {
         return pintorRepository.save(p);
     }
 
+    public java.util.Optional<Pintor> obtenerPorId(Long id) {
+        return pintorRepository.findById(id);
+    }
+
+    /** Edita los datos de un pintor (admin). No toca contraseña, rol ni activo. */
+    public Pintor editarPintor(Long id, com.wallpint.wallpint.dto.EditarPintorRequest req) {
+        Pintor p = pintorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pintor no encontrado"));
+
+        // Si está cambiando el email, verificamos que no esté en uso por otro
+        if (!p.getEmail().equalsIgnoreCase(req.getEmail())
+                && pintorRepository.findByEmail(req.getEmail()).isPresent()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT,
+                    "Ese email ya está en uso por otro pintor"
+            );
+        }
+
+        p.setNombre(req.getNombre());
+        p.setApellidos(req.getApellidos());
+        p.setEmail(req.getEmail());
+        p.setTelefono(req.getTelefono());
+        return pintorRepository.save(p);
+    }
+
     public Pintor registrarDesdeRequest(RegisterRequest req) {
         Pintor p = new Pintor(); // el constructor ya pone Rol.PINTOR
         p.setNombre(req.getNombre());
